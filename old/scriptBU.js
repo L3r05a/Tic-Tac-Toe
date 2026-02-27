@@ -1,9 +1,9 @@
-
 //GAMEBOARD IIFE object maker
 const gameboard = (function() {
     
 //gameboard array
 let board = Array(9).fill(null);
+
 
 return {
 
@@ -39,21 +39,21 @@ return {
  
      })();
 
-//Players Factory
+    //Players Factory
 
-function player(name, sign, moves) {
+    function player(name, sign, moves) {
 
         const playerName = name;
         const playerSign = sign;
         const playerMoves = moves;
 
         return {playerName, playerSign, playerMoves}
-};
+    };
 
 
 
-//GAMECONTROLLER Object IIFE
-const gameController = (function(){
+    //GAMECONTROLLER Object IIFE
+    const gameController = (function(){
 
     //variables
 
@@ -67,6 +67,13 @@ const gameController = (function(){
 
     //initiate turn
     let turn = 0;
+
+    //Winning state flag
+    let gameWon = false;
+
+    //Tied game flag;
+    let gameTied = false
+
 
     //win combo arrays by 0 index
     const winStates = [
@@ -96,6 +103,8 @@ const gameController = (function(){
     player1.playerMoves.length = 0;
     player2.playerMoves.length = 0;
     turn = 0;
+    gameWon = false;
+    gameTied = false;
 
     //debug players/turn
     return {players, turn}
@@ -103,13 +112,16 @@ const gameController = (function(){
     },
 
     //checkWin method
-    checkWin(currentSign) {
+    checkWin() {
 
     //assign current board to variable
     const curBoard = gameboard.getBoard();
+
+    //assign current player sign to variable
+    const currentSign = players[turn].playerSign;
     
-    // checks if currentsign completes winstate patterns
-    return  winStates.some(pattern => {
+    //gameWon = ANY of the Winstates patterns
+    gameWon = winStates.some(pattern => {
 
         //deconstructed
         const[a,b,c] = pattern;
@@ -122,7 +134,8 @@ const gameController = (function(){
                 curBoard[c] === currentSign
             );
     }); 
-
+    //returns current gameWon boolean
+    return gameWon;
     
 },
     
@@ -133,10 +146,12 @@ const gameController = (function(){
 
     //checks if all tiles are not null/empty
     const boardFull = curBoard.every(i => i !== null);
-     
+
+    //checks if board is full AND if the game is not won
+    gameTied = boardFull && !gameWon;
     
     //returns boolean
-    return boardFull;
+    return gameTied;
     },
 
 
@@ -150,14 +165,8 @@ const gameController = (function(){
     let won = false;
     let tie = false;
     
-    // Winner check variable
-    const winnerExists = this.checkWin('X') || this.checkWin('0');
-    
-    //tie check variable
-    const boardFull = this.checkTie();
-    
-    //stops (return) further moves if won/tied
-    if (winnerExists || boardFull) {
+    //prevent further moves after win/tie
+    if (gameTied || gameWon){
 
         return {gameOver: true,
                 turn,
@@ -167,19 +176,19 @@ const gameController = (function(){
         };
     }
 
-    //proceeds with move
     //calls modifyBoard (tile, current player sign) 
     result = gameboard.modifyBoard(tile, players[turn].playerSign);
     
 
+
     //if move OK 
     if (result.success){
 
-    //calls checkWin with current sign
-    won = this.checkWin(players[turn].playerSign);
+    //calls checkWin and asplayerSigns to won
+    won = this.checkWin();
     
-    //calls checkTie IF no winner
-    tie = !won && this.checkTie();
+    //calls checkTie and asplayerSigns to tied
+    tie = this.checkTie();
 
 
     // if not won or tie, increase turn
@@ -188,7 +197,7 @@ const gameController = (function(){
 
 
     //if turn is same as players[]lenght, reset turn
-    if (turn === players.length){
+    if (turn == players.length){
         turn = 0 ;}
     }
     
@@ -246,6 +255,8 @@ start.addEventListener("click", function(){display.innerHTML=''});
 start.addEventListener("click", function(){display.innerHTML='Place your mark'});
 
 
+
+
 //listener for each clicked tile element
 tiles.forEach((element, index)=>{
     element.addEventListener('click', () =>{
@@ -288,13 +299,17 @@ tiles.forEach((element, index)=>{
 
 
 })();
-
+//start listener to newGame()
 
 
 //DOM Module
 
+//Display/DOM Object
+//renders board
+//renders players selected tiles
 //displays players names
-
+//start/restart button
+// displays score
 
 
 

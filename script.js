@@ -9,45 +9,46 @@ return {
 
     //methods 
 
-        //Access board
-        getBoard() {return board;},
+    //Access board
+    getBoard() {return board;},
 
-        //replaces tile with player sign by index
-        modifyBoard(index, playerSign) { 
-        
-        //if the board index is not empty, return
-        if (board[index] !== null){
-        return {success: false, reason: 'taken', index, board}
-        };
-        //otherwise, current playersign replaces the index
-        board[index] = playerSign;
-        return {success:true, index, board};
+    //replaces tile with player sign by index
+    modifyBoard(index, playerSign) { 
+    
+    //if the board index is not empty, return
+    if (board[index] !== null){
+
+    return {success: false, reason: 'taken', index, board}
+    };
+
+    //otherwise, playersign replaces the index
+    board[index] = playerSign;
+    return {success:true, reason: 'empty', index, board};
 
     },
         
-        //resets board
-        resetBoard () {
+    //resets board
+    resetBoard () {
 
-        board = Array(9).fill(null);
+    board = Array(9).fill(null);
 
-        return board;
+    return board;
 
-        },
+    },
 
     };
 
  
      })();
 
-//Players Factory
+    //Players Factory
 
-function player(name, sign, moves) {
+    function player(name, sign,) {
 
         const playerName = name;
         const playerSign = sign;
-        const playerMoves = moves;
 
-        return {playerName, playerSign, playerMoves}
+    return {playerName, playerSign}
 };
 
 
@@ -55,18 +56,16 @@ function player(name, sign, moves) {
 //GAMECONTROLLER Object IIFE
 const gameController = (function(){
 
-    //variables
-
-    //default players to variables
-    const player1 = player('player1', "X", []);       
-        
-    const player2 = player('player2', "0", []);
-
-    //players array for turn rotation
-    let players = [player1, player2];
+//Variables
 
     //initiate turn
     let turn = 0;
+
+    //initiaye gameOver flag
+    let gameOver = false;
+
+    //initiate players array
+    let players = [];
 
     //win combo arrays by 0 index
     const winStates = [
@@ -85,21 +84,41 @@ const gameController = (function(){
 
     //methods
 
+    //received player names from UI
+    setPlayers(name1, name2) {
+
+        const player1 =  player (name1, 'X');
+        const player2 = player(name2, 'O');
+
+        return players = [player1, player2]
+
+    },
+
+    getPlayers() {
+        return players;
+    },
+
     //Newgame method
     newGame() {
 
     //call reset of board
     gameboard.resetBoard();
 
-    
     //reset flags and turn
-    player1.playerMoves.length = 0;
-    player2.playerMoves.length = 0;
+
+    gameOver = false;
     turn = 0;
 
     //debug players/turn
     return {players, turn}
 
+    },
+    //controller guard for players check 
+    isReady(){
+        
+    if(this.getPlayers().lenght === 2)
+
+    return true
     },
 
     //checkWin method
@@ -108,13 +127,13 @@ const gameController = (function(){
     //assign current board to variable
     const curBoard = gameboard.getBoard();
     
-    // checks if currentsign completes winstate patterns
+    // if any of the winState patterns
     return  winStates.some(pattern => {
 
         //deconstructed
         const[a,b,c] = pattern;
 
-        //returns true or fase based on these tests
+        //return true to this pattern/playerSing equality test
         return( 
             
                 curBoard[a] === currentSign &&
@@ -134,7 +153,6 @@ const gameController = (function(){
     //checks if all tiles are not null/empty
     const boardFull = curBoard.every(i => i !== null);
      
-    
     //returns boolean
     return boardFull;
     },
@@ -142,6 +160,30 @@ const gameController = (function(){
 
     //playerMove() Method
     playerMove (tile) {
+    
+    //guard against DOM clicks before players names
+   if(players.length === 0) {
+    return {    
+            gameOver: true,
+            result: null,
+            won: false,
+            tie: false,
+            turn, 
+            players,
+        };}
+
+    // gameover check variable
+    if(gameOver){
+    return {
+            gameOver: true,
+            result: null,
+            won: false,
+            tie: false,
+            turn, 
+            players,
+        };
+    }
+
 
     //initialise result variable
     let result =  null;
@@ -149,28 +191,12 @@ const gameController = (function(){
     //initialise checkWin and CheckTie related status variables
     let won = false;
     let tie = false;
-    
-    // Winner check variable
-    const winnerExists = this.checkWin('X') || this.checkWin('0');
-    
-    //tie check variable
-    const boardFull = this.checkTie();
-    
-    //stops (return) further moves if won/tied
-    if (winnerExists || boardFull) {
 
-        return {gameOver: true,
-                turn,
-                result,
-                won,
-                tie,
-        };
-    }
 
     //proceeds with move
     //calls modifyBoard (tile, current player sign) 
     result = gameboard.modifyBoard(tile, players[turn].playerSign);
-    
+
 
     //if move OK 
     if (result.success){
@@ -180,12 +206,23 @@ const gameController = (function(){
     
     //calls checkTie IF no winner
     tie = !won && this.checkTie();
+    
+    //sets variable and returns if won or tie
+    if(won || tie){
+        gameOver = true;
+        return {gameOver : true,
+                turn,
+                result,
+                players,
+                won,
+                tie
+
+    }};
 
 
     // if not won or tie, increase turn
     if (!won && !tie) {
         turn  ++};
-
 
     //if turn is same as players[]lenght, reset turn
     if (turn === players.length){
@@ -212,6 +249,15 @@ const gameController = (function(){
 //DOM IIFE object
 const domObj = (function(){
 
+//variables
+
+//name entry turn counter
+let nameStage = 0;
+
+//players name variables
+let name1;
+let name2;
+
 //DOM elements
 
 //re/start button
@@ -221,54 +267,103 @@ const start = document.querySelector('.startButton');
 const grid = document.querySelector('.boardGrid');
 
 //all tiles selector
-
 const tiles = document.querySelectorAll('.tile');
 
 //status display selector
 const display = document.querySelector('.statusDisplay');
 
+//prompt display 
+const prompt = document.querySelector('.promptDisplay');
+prompt.textContent = 'Enter Player 1 Name';
+
+//players names entry form 
+const form = document.querySelector('form');
+
+//players name entry inout
+const input = document.querySelector('input');
 
 
 //listeners
 
-//start button
-
-//newGame call
-start.addEventListener("click", gameController.newGame);
-
-//reset tile UI
-start.addEventListener("click", function(){tiles.forEach((element) => element.innerHTML='')});
-
-//reset display UI
-start.addEventListener("click", function(){display.innerHTML=''});
 
 //Initial display game prompt
-start.addEventListener("click", function(){display.innerHTML='Place your mark'});
+start.addEventListener("click", function(){
+    
+if(!gameController.getPlayers().length){
 
+    return};
+  
+    if (gameController.getPlayers().length){
+    //newGame call
+    gameController.newGame(); 
+    
+    //reset tile UI
+    tiles.forEach((element) => element.textContent='');
+    
+    //reset status display
+    display.textContent="";
+    
+    //begin  text prompt
+    prompt.textContent ='Place your mark';
+
+    };
+
+});
+
+    
+//players name entry listener and logic
+form.addEventListener('submit', function(event){
+
+    event.preventDefault();
+    
+    if (nameStage === 0){
+    name1 = input.value;
+    prompt.textContent = '';
+    
+    prompt.append("Enter Player 2 Name")
+    input.value = '';
+    nameStage ++;
+    // console.log(nameStage)
+    return};
+
+    if (nameStage === 1){
+    name2 = input.value;
+    gameController.setPlayers(name1, name2);
+    form.remove();
+    prompt.textContent ='Place your mark'};
+});
+    
 
 //listener for each clicked tile element
 tiles.forEach((element, index)=>{
     element.addEventListener('click', () =>{
 
 
+    // //guards if no players are named
+    // if(!gameController.isReady()
+    // ) return;
+
     //call playerMove with the index of the tile
     const moveData = gameController.playerMove(index);
-    // console.log(moveData)
+    console.log(moveData)
+    
 
-    //
-    if (moveData.gameOver){
+
+    //if gameOver & result is not null(legit winning move)
+    if(moveData.gameOver && !moveData.result){
         return
     };
 
     //if move legit...
-    if(moveData.result.success === true){
+    if(moveData.result && moveData.result.success){
 
     //1) resets display
-    display.innerHTML='';
+    prompt.textContent='';
 
-    //2) updates tile with board turn player sign
+    //2) render tile with board turn player sign
     element.append(moveData.result.board[index]);
     };
+
 
     //TIE UI Message
     if (moveData.tie === true){
@@ -278,9 +373,15 @@ tiles.forEach((element, index)=>{
     //WON UI message
     if(moveData.won === true)
     {
-    display.append(`Player ${moveData.result.board[index]} Wins!`);
+    display.append(`${moveData.players[moveData.turn].playerName} Wins!`);
+
+        if (moveData.gameOver){
+          return
+    };
     
     };
+
+
 
     })
 })
@@ -288,73 +389,3 @@ tiles.forEach((element, index)=>{
 
 
 })();
-
-
-
-//DOM Module
-
-//displays players names
-
-
-
-
-
-//OBSOLETE
-
-//     //current players accumulated tiles
-    //     const currentMoves = players[turn].playerMoves;
-
-    //     //(outer) iterates over winstates
-    //     for (let i = 0; i < winStates.length; i++) {
-
-    //     //stores single array item in 'pattern'
-    //     const pattern = winStates[i];
-
-    //     //creates 'is match' set to true
-    //     let isMatch = true;
-
-    //     //(INNER)iterates over each item in pattern
-    //     for (let j=0; j < pattern.length; j++) {
-
-    //     //stores single array item (single value) in 'number'
-    //     const number = pattern[j];
-            
-    //     //if 'currentMoves' does not include 'number'
-    //         if (!currentMoves.includes(number)){
-    //             isMatch = false;
-    //             break;
-    //         }
-    //     //inner loop ends
-    //     };
-    //     //if currentMoves includes all 'number's
-    //     if (isMatch){
-    //         gameWon = true;
-    //         console.log('Winner!', "Won?", gameWon, "Tied?", gameTied);
-    //         break
-    //     };
-
-        
-    // //outloop end
-    // }
-    // //boolean
-
-    //create total elements variable
-        // const totalElements = player1.playerMoves.length + player2.playerMoves.length;
-
-                //if all tiles taken and no win it's a tie
-        // if (totalElements === 9 && gameWon != true) {
-        //     gameTied = true;
-        //     console.log('TIE!');
-        // };
-
-        //Winning conditions
-    // const winStates = [
-
-    // [1,2,3] , [4,5,6] , [7,8,9],//horizontal win  
-    // [1,4,7], [2,5,8], [3,6,9], //vertical win 
-    // [1,5,9], [3,5,7] //diagonal win 
-
-    // ];
-
-    //place tile in player moves array
-    //players[turn].playerMoves.push(tile);

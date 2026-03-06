@@ -60,7 +60,14 @@ margin: 10px;
     border: 1px solid tomato;
     font-size: 3vw;
     padding: 2px 5px;
+}
 
+button {
+    color: white;
+    text-shadow: 1px 1px 1px black;
+}
 
-
+input {
+    background-color: rgb(151, 151, 192);
+    
 }

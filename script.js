@@ -1,4 +1,3 @@
-
 //GAMEBOARD IIFE object maker
 const gameboard = (function() {
     
@@ -12,7 +11,7 @@ return {
     //Access board
     getBoard() {return board;},
 
-    //replaces tile with player sign by index
+    //updates tile array with currentplayer sign
     modifyBoard(index, playerSign) { 
     
     //if the board index is not empty, return
@@ -38,7 +37,7 @@ return {
 
     };
 
- 
+ //end of gameboard
      })();
 
     //Players Factory
@@ -58,16 +57,22 @@ const gameController = (function(){
 
 //Variables
 
-    //initiate turn
-    let turn = 0;
-
-    //initiaye gameOver flag
+    //declare gameOver flag
     let gameOver = false;
 
-    //initiate players array
+    //declare players array
     let players = [];
 
-    //win combo arrays by 0 index
+    //declare currentPlayer(turn)
+    let currentPlayer = null;
+
+    //return helper function:
+    function buildState(gameOver, result, won, tie){
+        return {gameOver, result, won, tie, currentPlayer, players}
+    };
+
+
+    //declare win states arrays 
     const winStates = [
 
     [0,1,2],
@@ -84,16 +89,27 @@ const gameController = (function(){
 
     //methods
 
-    //received player names from UI
+
+    //update player names from UI
     setPlayers(name1, name2) {
 
+        //call player factory 
         const player1 =  player (name1, 'X');
         const player2 = player(name2, 'O');
 
-        return players = [player1, player2]
+        //assign players to array
+        players = [player1, player2];
+
+        //sets currentplayer as the player object at index 0
+        //of the players array
+        currentPlayer = players[0];
+
+        //return array of players
+        return players;
 
     },
 
+    //getter for isReady players length check
     getPlayers() {
         return players;
     },
@@ -105,20 +121,20 @@ const gameController = (function(){
     gameboard.resetBoard();
 
     //reset flags and turn
-
     gameOver = false;
-    turn = 0;
+    //sets currentplayer as the player object at index 0
+    //of the players array
+    currentPlayer = players[0];
 
-    //debug players/turn
-    return {players, turn}
+    //players/turn
+    return {players, currentPlayer}
 
     },
-    //controller guard for players check 
+    //controller guard boolean return
     isReady(){
-        
-    if(this.getPlayers().lenght === 2)
 
-    return true
+    return players.length === 2;
+    
     },
 
     //checkWin method
@@ -133,7 +149,7 @@ const gameController = (function(){
         //deconstructed
         const[a,b,c] = pattern;
 
-        //return true to this pattern/playerSing equality test
+        //return true to this pattern/player sign equality test
         return( 
             
                 curBoard[a] === currentSign &&
@@ -161,87 +177,71 @@ const gameController = (function(){
     //playerMove() Method
     playerMove (tile) {
     
-    //guard against DOM clicks before players names
-   if(players.length === 0) {
-    return {    
-            gameOver: true,
-            result: null,
-            won: false,
-            tie: false,
-            turn, 
-            players,
-        };}
+    //blocks controller move if no players names
+   if(!gameController.isReady()) 
+    return    
+            buildState(true, null, false, false);
 
-    // gameover check variable
-    if(gameOver){
-    return {
-            gameOver: true,
-            result: null,
-            won: false,
-            tie: false,
-            turn, 
-            players,
-        };
-    }
+    // blocks controller move if gameover
+    if(gameOver)
+    return  buildState(true, null, false, false);
 
-
-    //initialise result variable
+    //declare result variable
     let result =  null;
 
-    //initialise checkWin and CheckTie related status variables
+    //declare checkWin and CheckTie related status variables
     let won = false;
     let tie = false;
 
 
     //proceeds with move
-    //calls modifyBoard (tile, current player sign) 
-    result = gameboard.modifyBoard(tile, players[turn].playerSign);
+    //calls modifyBoard (tile, current player sign) & assigns to variable
+    result = gameboard.modifyBoard(tile, currentPlayer.playerSign);
 
 
     //if move OK 
     if (result.success){
 
     //calls checkWin with current sign
-    won = this.checkWin(players[turn].playerSign);
+    won = this.checkWin(currentPlayer.playerSign);
     
     //calls checkTie IF no winner
     tie = !won && this.checkTie();
     
-    //sets variable and returns if won or tie
+    //gameOver if won or tied
     if(won || tie){
+        //updates variable
         gameOver = true;
-        return {gameOver : true,
-                turn,
-                result,
-                players,
-                won,
-                tie
+        //gameOver, result, won, tie
+        return buildState(true, result,won,tie)
+                
 
-    }};
+    };
 
+    //ternary toggle(turn)
+    //is currentplayer at index 0
+    currentPlayer = currentPlayer === players[0]
+    //true, move to index 1
+    ? players[1]
+    //false move to index 0
+    :players [0];
 
-    // if not won or tie, increase turn
-    if (!won && !tie) {
-        turn  ++};
-
-    //if turn is same as players[]lenght, reset turn
-    if (turn === players.length){
-        turn = 0 ;}
     }
+
     
-    // turn, result, players, won, tie object 
-    return {gameOver: false,
-            turn,
+    // gameOver, result, won, tie
+    return buildState(false,
             result,
-            players,
             won,
-            tie};
+            tie,
+    );
+            
                 
     //playerMove ends            
     },
 
     
-//main return end
+
 }
 //gamecontroller ends
 })();
@@ -260,7 +260,7 @@ let name2;
 
 //DOM elements
 
-//re/start button
+//start button
 const start = document.querySelector('.startButton');
 
 //main grid 
@@ -274,7 +274,7 @@ const display = document.querySelector('.statusDisplay');
 
 //prompt display 
 const prompt = document.querySelector('.promptDisplay');
-prompt.textContent = 'Enter Player 1 Name';
+prompt.textContent = 'PLAYER 1';
 
 //players names entry form 
 const form = document.querySelector('form');
@@ -289,103 +289,102 @@ const input = document.querySelector('input');
 //Initial display game prompt
 start.addEventListener("click", function(){
     
-if(!gameController.getPlayers().length){
-
-    return};
-  
-    if (gameController.getPlayers().length){
+    //blocks DOM if 2 players not ready
+    if(!gameController.isReady()
+    ) return;
+    
     //newGame call
     gameController.newGame(); 
     
-    //reset tile UI
-    tiles.forEach((element) => element.textContent='');
+    //resets tiles UI
+    tiles.forEach((element) => element.textContent= '');
     
     //reset status display
-    display.textContent="";
+    display.textContent= "PLACE YOUR MARK";
     
-    //begin  text prompt
-    prompt.textContent ='Place your mark';
-
-    };
-
 });
 
     
-//players name entry listener and logic
+//players name form listener and logic
 form.addEventListener('submit', function(event){
 
+    //prevents default  submit reloading of page
     event.preventDefault();
     
+    //first turn user name entry caching
     if (nameStage === 0){
     name1 = input.value;
+    //clear prompt
     prompt.textContent = '';
     
-    prompt.append("Enter Player 2 Name")
+    //prompt update
+    prompt.append("PLAYER 2")
     input.value = '';
+    //increase naming turn counter
     nameStage ++;
-    // console.log(nameStage)
     return};
-
+    
+    //2nd user caching
     if (nameStage === 1){
     name2 = input.value;
+    //call setplayers with names
     gameController.setPlayers(name1, name2);
     form.remove();
-    prompt.textContent ='Place your mark'};
+    display.textContent ='PLACE YOUR MARK'};
 });
     
 
-//listener for each clicked tile element
-tiles.forEach((element, index)=>{
-    element.addEventListener('click', () =>{
+//listener for clicked tile elements (move)
+
+grid.addEventListener('click', function(event){
 
 
-    // //guards if no players are named
-    // if(!gameController.isReady()
-    // ) return;
+    //declare variable for closest element to tile in the DOM
+    const tile = event.target.closest('.tile');
 
-    //call playerMove with the index of the tile
+    //if not tile 
+    if(!tile) return;
+
+    
+    //gets index dataset value of clicked tile
+    let index = Number(tile.dataset.index);
+    
+    
+    //calls playerMove with tile index
     const moveData = gameController.playerMove(index);
-    console.log(moveData)
     
 
-
-    //if gameOver & result is not null(legit winning move)
-    if(moveData.gameOver && !moveData.result){
+    //block if gameOver & result is not null(legit winning move)
+     if(moveData.gameOver && !moveData.result){
         return
     };
 
-    //if move legit...
+    //if move is legit
     if(moveData.result && moveData.result.success){
 
     //1) resets display
-    prompt.textContent='';
+    display.textContent='';
 
-    //2) render tile with board turn player sign
-    element.append(moveData.result.board[index]);
-    };
+    //2) render tile with index sign of resulted move
+    tile.textContent = moveData.result.board[index];
+    
 
-
-    //TIE UI Message
+    //TIE display update
     if (moveData.tie === true){
-        display.append(`Tie! The only winning move is not to play Dr Faulkner`);
+        
+        display.textContent = `The only winning move is not to play.`;
         
     };
-    //WON UI message
+    //WON display update
     if(moveData.won === true)
-    {
-    display.append(`${moveData.players[moveData.turn].playerName} Wins!`);
+    {display.textContent = `${moveData.currentPlayer.playerName} WINS!`;
 
-        if (moveData.gameOver){
-          return
+    if (moveData.gameOver){
+        return
     };
     
     };
 
-
-
-    })
+    }
 })
-
-
-
 })();

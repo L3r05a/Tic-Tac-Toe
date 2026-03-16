@@ -1,73 +1,190 @@
 * {
-    background-color: rgb(81, 81, 185);
+    
     font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
 }
 
+@font-face {
+    font-family: myFont;
+    src: url(ZenDots-Regular.woff);
+}
+
+body {
+    color: white;
+    margin: 0;
+}
+
+/* reset for input elements */
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+  font-size: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
 .container {
+    min-height: 100vh;
     display: flex;
     flex-direction: column;
     align-items: center;
+    justify-content: center;
+    background:linear-gradient( rgb(64, 64, 206),rgb(3, 3, 65));
+    
+    
 }
 
-.topBanner, .statusDisplay {
+.topBanner > p {
+    font-family: myFont , system-ui;
 
+    text-shadow: 2px 2px 3px rgb(10, 172, 110);
+    font-size: clamp(1.5rem, 4vw, 2rem);
+    letter-spacing: 0.7em;
+    line-height: 1;
+    
+    
+}
+
+
+button {
     color: white;
     text-shadow: 1px 1px 1px black;
-    font-size: xx-large;
+    background-color: rgb(154, 125, 207);
+    box-shadow: tomato 2px 2px;
+    
+}
+
+button:hover {
+    color: tomato;
+
+}
+
+#playerIDSubmit:active, button:active{
+    background-color: rgb(108, 108, 173);
+}
+
+#playerIDSubmit{
+    width: 6rem;
+    background-color: rgb(158, 86, 180);
+    border: 0;
+    margin: 0 0 1rem 0;
+    gap: 20px;
+    font-size: 1rem;
+    font-weight: bold;
+    border-radius: 5px;
+    padding: 5px;
+    
 }
 
 .startButton {
     border: 0;
-    line-height: 2.5;
-    padding: 0 20px;
+    font-weight: bold;
+    
+    padding: 6px 15px;
     font-size: 1rem;
     text-align: center;
-    color: white;
     text-shadow: 1px 1px 1px black;
     border-radius: 10px;
-    background-color: rgb(108, 108, 173);;
     
 }
 
-.boardGrid {
 
+.boardGrid {
 display: grid;
-grid-template: 80px 80px 80px/ 80px 80px 80px;
-gap: 10px;
-margin: 10px;
+
+width: clamp(15rem, 45vw, 24rem);
+aspect-ratio: 1 / 1;
+
+grid-template-columns: repeat(3, 1fr);
+grid-template-rows: repeat(3, 1fr);
+
+gap: clamp(1rem, 2vw, 1.5rem);
+margin: 20px 0 10px 0;
+
+
 }
+
 
 .tile {
     display: flex;
     justify-content: center;
     align-items: center;
-    color: white;
-    font-size: 2rem;
-
-}
-
-.boardGrid > div {
+    font-size: 4rem;
+    line-height: 1;
     border: 1px solid tomato;
+    background-color:  rgb(81, 81, 185);
+    box-shadow:0 .08em .2em rgb(10, 172, 110);
+    transition: all 0.2s ease;
+  
 }
 
-.statusDisplay {
+.tile:active {
+    background-color: rgb(108, 108, 173);
+}
+
+
+.tile:hover{
+    transform: scale(1.02);
+    box-shadow:.1em .1em .2em rgb(10, 172, 110);
+    
+}
+
+
+
+.statusDisplay  {
     display: grid;
     place-items: center;
-    width: 260px;
-    height: 80px;
+    width: clamp(14rem, 25vw, 25rem);
+    height: clamp(5rem, 50vw, 11rem);
     margin: 10px;
-    text-shadow: 1px 1px 1px black;
-    border: 1px solid tomato;
-    font-size: 3vw;
+
+    border: thick double  tomato;
+    border-radius: 10px;
+
     padding: 2px 5px;
+    font-size: clamp(1rem, 5vw, 1.5rem);
+    background-color: rgb(124, 13, 189);
+    box-shadow:.2em .5em .4em rgb(10, 172, 110);
+    text-shadow: 2px 2px 2px rgb(10, 172, 110);
+    text-transform : uppercase
 }
 
-button {
-    color: white;
-    text-shadow: 1px 1px 1px black;
+.promptDisplay {
+    
+    padding: 0;
+    margin: 5px 0 15px;
+    font-weight: bold;
+    font-size: clamp(1rem, 5vw, 2rem);
+    text-shadow: 2px 2px 2px rgb(10, 172, 110);
+    text-transform : uppercase
+}
+
+form {
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    filter: contrast(150%);
+    gap: 15px;
+    
+    
+
 }
 
 input {
-    background-color: rgb(151, 151, 192);
+    align-items: center;
+    background-color: rgb(69, 12, 102);
+    color: white;
+    border: none; 
+    box-shadow: .3em .2em .3em rgb(10, 172, 110);
+    padding: 10px;
+    font-size: 1.2rem;
+    border-radius: 10px;
+    width: 10rem ;
+}
+
+input:focus {
+    background-color: rgb(99, 103, 134);
     
 }
